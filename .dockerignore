@@ -1,0 +1,9 @@
+# Contexte de build minimal : seuls pyproject, README, requirements/, src/ et le modèle.
+*
+!pyproject.toml
+!README.md
+!requirements/constraints.txt
+!src/
+!models/model.pt
+**/__pycache__
+**/*.pyc

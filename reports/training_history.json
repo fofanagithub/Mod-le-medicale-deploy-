@@ -1,0 +1,60 @@
+{
+  "config": {
+    "data_dir": "data",
+    "output": "models\\model.pt",
+    "reports_dir": "reports",
+    "model_version": "1.0.0",
+    "epochs": 8,
+    "batch_size": 32,
+    "lr_backbone": 0.0001,
+    "lr_head": 0.001,
+    "weight_decay": 0.0001,
+    "patience": 3,
+    "target_sensitivity": 0.95,
+    "num_workers": 0,
+    "seed": 42,
+    "limit": null
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.0720749671967382,
+      "val_auroc": 0.997657812053699
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.039002192627635414,
+      "val_auroc": 0.997486432447872
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.03190218435779227,
+      "val_auroc": 0.9984575835475579
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.020742087907449816,
+      "val_auroc": 0.9988384271160621
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.01915295532538208,
+      "val_auroc": 0.9986860896886604
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.01754763930759398,
+      "val_auroc": 0.9990288489003142
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.011021559375133319,
+      "val_auroc": 0.999105017614015
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.0095673500647857,
+      "val_auroc": 0.999009806721889
+    }
+  ]
+}

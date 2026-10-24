@@ -1,0 +1,18 @@
+# Configuration d'entraînement (versionnée : un résultat = un commit + ce fichier).
+data_dir: data
+output: models/model.pt
+reports_dir: reports
+model_version: "1.0.0"
+
+epochs: 8
+batch_size: 32
+lr_backbone: 1.0e-4   # backbone pré-entraîné : petits pas
+lr_head: 1.0e-3       # tête aléatoire : apprend plus vite
+weight_decay: 1.0e-4
+patience: 3           # early stopping sur l'AUROC de validation
+
+# Objectif clinique : on veut rater au plus 5 % des pneumonies (choix du seuil sur val).
+target_sensitivity: 0.95
+
+num_workers: 0        # 0 = robuste sous Windows ; augmenter sous Linux
+seed: 42

@@ -1,0 +1,67 @@
+{
+  "model_version": "1.0.0",
+  "sha256": "db8eed2a901d8801ee32a51a9c482d4e5d4a0d9fa1a0266393cffe363f9f143b",
+  "threshold": 0.30970385670661926,
+  "test": {
+    "auroc": 0.9962086346701732,
+    "auprc": 0.9977523628200026,
+    "accuracy": 0.969551282051282,
+    "sensitivity": 0.9794871794871794,
+    "specificity": 0.9529914529914529,
+    "ppv": 0.9720101781170484,
+    "npv": 0.9653679653679653,
+    "f1": 0.9757343550446999,
+    "threshold": 0.30970385670661926,
+    "confusion_matrix": {
+      "tn": 223,
+      "fp": 11,
+      "fn": 8,
+      "tp": 382
+    },
+    "n": 624,
+    "prevalence": 0.625
+  },
+  "test_ci95": {
+    "auroc": [
+      0.9935199173376097,
+      0.9984823620601593
+    ],
+    "sensitivity": [
+      0.9645501808318264,
+      0.9923278550550655
+    ],
+    "specificity": [
+      0.9234229442208166,
+      0.9771779282745882
+    ],
+    "accuracy": [
+      0.9551282051282052,
+      0.9823717948717948
+    ]
+  },
+  "validation": {
+    "auroc": 0.999105017614015,
+    "auprc": 0.9996893669319205,
+    "accuracy": 0.9694656488549618,
+    "sensitivity": 0.9588688946015425,
+    "specificity": 1.0,
+    "ppv": 1.0,
+    "npv": 0.8940397350993378,
+    "f1": 0.979002624671916,
+    "threshold": 0.30970385670661926,
+    "confusion_matrix": {
+      "tn": 135,
+      "fp": 0,
+      "fn": 16,
+      "tp": 373
+    },
+    "n": 524,
+    "prevalence": 0.7423664122137404
+  },
+  "gradcam_sanity_check": {
+    "method": "randomisation de layer4 + t\u00eate, corr\u00e9lation de Spearman des cartes",
+    "n_images": 32,
+    "mean_spearman": 0.012422271716805293,
+    "interpretation": "proche de 0 = la carte d\u00e9pend des poids appris (attendu)"
+  }
+}

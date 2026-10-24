@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, types, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Installer PyTorch CPU puis le projet
+        run: |
+          pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install --constraint requirements/constraints.txt -e ".[train,dev]"
+      - run: ruff check src tests
+      - run: ruff format --check src tests
+      - run: mypy
+      - run: pytest
+
+  docker:
+    name: Build & smoke test de l'image
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Checkpoint factice (le vrai modèle n'est pas versionné dans git)
+        run: |
+          pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install --constraint requirements/constraints.txt -e .
+          python scripts/make_dummy_checkpoint.py models/model.pt
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: medxray-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test
+        run: |
+          docker run -d --name api -p 8000:8000 medxray-api:ci
+          for i in $(seq 1 30); do curl -sf localhost:8000/ready && break; sleep 2; done
+          python scripts/make_sample_xray.py /tmp/sample.png
+          curl -sf -F "file=@/tmp/sample.png;type=image/png" localhost:8000/v1/predict | tee /tmp/out.json
+          python -c "import json; assert json.load(open('/tmp/out.json'))['label'] in ('normal', 'pneumonia')"
+          test "$(docker inspect -f '{{.Config.User}}' medxray-api:ci)" = "app"
+      - if: failure()
+        run: docker logs api

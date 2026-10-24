@@ -1,0 +1,25 @@
+services:
+  api:
+    build: .
+    image: medxray-api:1.0.0
+    ports:
+      - "8000:8000"
+    environment:
+      MEDXRAY_LOG_LEVEL: INFO
+      MEDXRAY_MAX_UPLOAD_MB: "10"
+      MEDXRAY_TORCH_THREADS: "2"
+      OMP_NUM_THREADS: "2"
+    # Durcissement : système de fichiers en lecture seule, aucun privilège supplémentaire.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+    restart: unless-stopped

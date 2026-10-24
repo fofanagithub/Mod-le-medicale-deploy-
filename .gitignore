@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Données et artefacts lourds : jamais dans git.
+data/
+models/*.pt
+*.log
+
+# Rapports : seuls les livrables finaux sont versionnés.
+reports/*
+!reports/metrics.json
+!reports/training_history.json
+!reports/*.png
+
+# Divers
+.env
+.DS_Store
+.vscode/
+.idea/

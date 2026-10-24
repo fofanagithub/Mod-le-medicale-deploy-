@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedXRay — démo</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c2430; --muted:#5b6675; --line:#dfe3e8;
+          --accent:#2457d6; --pos:#c0392b; --neg:#1e8449; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12161c; --card:#1b2129; --text:#e6eaf0; --muted:#9aa5b4; --line:#2c3440;
+            --accent:#6f9bff; --pos:#ff7a6b; --neg:#5fd38d; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+         background:var(--bg); color:var(--text); }
+  main { max-width:960px; margin:0 auto; padding:32px 16px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  p.sub { color:var(--muted); margin:0 0 24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .drop { border:2px dashed var(--line); border-radius:8px; padding:28px; text-align:center;
+          cursor:pointer; color:var(--muted); }
+  .drop.over { border-color:var(--accent); color:var(--accent); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px; }
+  @media (max-width:640px) { .grid { grid-template-columns:1fr; } }
+  figure { margin:0; } figcaption { color:var(--muted); font-size:13px; margin-top:6px; }
+  img { width:100%; border-radius:6px; background:#000; display:block; }
+  .result { margin-top:20px; display:none; }
+  .label { font-size:20px; font-weight:600; }
+  .label.pneumonia { color:var(--pos); } .label.normal { color:var(--neg); }
+  .bar { height:8px; background:var(--line); border-radius:4px; margin:8px 0; position:relative; }
+  .bar > span { position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:4px; }
+  .bar > i { position:absolute; top:-4px; width:2px; height:16px; background:var(--text); }
+  .meta { color:var(--muted); font-size:13px; }
+  .err { color:var(--pos); margin-top:12px; }
+  .warn { margin-top:24px; font-size:13px; color:var(--muted); border-left:3px solid var(--pos);
+          padding-left:10px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>MedXRay</h1>
+  <p class="sub">Détection de pneumonie sur radiographie thoracique, avec carte Grad-CAM. ·
+    <a href="/docs">Documentation de l'API</a></p>
+
+  <div class="card">
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept="image/png,image/jpeg" hidden>
+      Déposez une radiographie (PNG / JPEG) ou cliquez pour choisir un fichier
+    </label>
+    <div class="err" id="err"></div>
+
+    <div class="result" id="result">
+      <div class="label" id="label"></div>
+      <div class="bar"><span id="prob"></span><i id="thr"></i></div>
+      <div class="meta" id="meta"></div>
+      <div class="grid">
+        <figure><img id="orig" alt="Radiographie envoyée"><figcaption>Image envoyée</figcaption></figure>
+        <figure><img id="cam" alt="Carte Grad-CAM"><figcaption id="camcap">Grad-CAM</figcaption></figure>
+      </div>
+    </div>
+  </div>
+
+  <p class="warn">Outil de démonstration pédagogique. Ce n'est pas un dispositif médical et il ne
+    doit pas être utilisé pour poser un diagnostic. Aucune image n'est conservée par le serveur.</p>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const drop = $("drop"), input = $("file");
+
+["dragenter", "dragover"].forEach((e) => drop.addEventListener(e, (ev) => {
+  ev.preventDefault(); drop.classList.add("over");
+}));
+["dragleave", "drop"].forEach((e) => drop.addEventListener(e, (ev) => {
+  ev.preventDefault(); drop.classList.remove("over");
+}));
+drop.addEventListener("drop", (ev) => ev.dataTransfer.files[0] && analyse(ev.dataTransfer.files[0]));
+input.addEventListener("change", () => input.files[0] && analyse(input.files[0]));
+
+async function analyse(file) {
+  $("err").textContent = "";
+  $("result").style.display = "none";
+  drop.textContent = "Analyse en cours…";
+  const body = new FormData();
+  body.append("file", file);
+  try {
+    const res = await fetch("/v1/explain", { method: "POST", body });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    $("orig").src = URL.createObjectURL(file);
+    $("cam").src = "data:image/png;base64," + data.heatmap_png_base64;
+    $("label").textContent = data.label === "pneumonia" ? "Pneumonie suspectée" : "Pas de pneumonie détectée";
+    $("label").className = "label " + data.label;
+    $("prob").style.width = (data.probability_pneumonia * 100).toFixed(1) + "%";
+    $("thr").style.left = (data.threshold * 100).toFixed(1) + "%";
+    $("meta").textContent = `P(pneumonie) = ${(data.probability_pneumonia * 100).toFixed(1)} % · ` +
+      `seuil ${(data.threshold * 100).toFixed(1)} % · modèle v${data.model_version} · ${data.inference_ms} ms`;
+    $("camcap").textContent = `Grad-CAM : zones en faveur de « ${data.explained_class === "pneumonia" ? "pneumonie" : "normal"} »`;
+    $("result").style.display = "block";
+  } catch (e) {
+    $("err").textContent = "Erreur : " + e.message;
+  } finally {
+    drop.textContent = "Déposez une autre radiographie ou cliquez pour choisir un fichier";
+    drop.appendChild(input);
+  }
+}
+</script>
+</body>
+</html>

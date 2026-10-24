@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "medxray"
+version = "1.0.0"
+description = "Détection de pneumonie sur radiographie thoracique, servie par FastAPI avec explications Grad-CAM."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mamadou Moussa" }]
+# Dépendances d'exécution uniquement : l'image Docker n'embarque que celles-ci.
+dependencies = [
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "numpy>=1.26",
+    "pillow>=10.3",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+]
+
+[project.optional-dependencies]
+train = ["medmnist>=3.0", "scikit-learn>=1.4", "matplotlib>=3.8", "pyyaml>=6.0"]
+dev = ["pytest>=8.0", "httpx2>=2.16", "ruff>=0.6", "mypy>=1.10"]
+
+[project.scripts]
+medxray-train = "medxray.training.train:main"
+medxray-evaluate = "medxray.training.evaluate:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+medxray = ["api/static/*.html", "py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "N", "RUF", "PT"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # caractères accentués dans les docstrings françaises
+    "N812",  # alias conventionnels : `functional as F`, `transforms as T`
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# Idiome FastAPI : `Depends(...)`, `File(...)` en valeur par défaut est voulu.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Query"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+filterwarnings = ["error::DeprecationWarning:medxray.*"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+packages = ["medxray"]
+strict = true
+ignore_missing_imports = true
+# torchvision / medmnist ne sont pas typés : on n'exige pas de types sur leurs appels.
+disallow_untyped_calls = false
